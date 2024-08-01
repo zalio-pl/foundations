@@ -116,8 +116,12 @@ object UserCreationExercises {
   //       and update the signature of `readUser`.
   def readUser(console: Console, clock: Clock, maxAttempts: Int): User = {
     val name                    = readName(console)
-    val dateOfBirth             = readDateOfBirthRetry(console, maxAttempts)
-    val subscribedToMailingList = readSubscribeToMailingListRetry(console, maxAttempts)
+    val dateOfBirth             = retry(maxAttempts) {
+      readDateOfBirthRetry(console, maxAttempts)
+    }
+    val subscribedToMailingList = retry(maxAttempts) {
+      readSubscribeToMailingListRetry(console, maxAttempts)
+    }
     val user                    = User(name, dateOfBirth, subscribedToMailingList, clock.now())
 
     console.writeLine(s"User is $user")
@@ -143,10 +147,13 @@ object UserCreationExercises {
   //       trying both possibilities.
   def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean = {
     retry(maxAttempt) {
-      onError(readSubscribeToMailingList(console), exception => {
-        console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
-        throw exception
-      })
+      onError(
+        action = readSubscribeToMailingList(console),
+        cleanup = exception => {
+          console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
+          throw exception
+        }
+      )
     }
   }
 
@@ -167,10 +174,12 @@ object UserCreationExercises {
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
   def readDateOfBirthRetry(console: Console, maxAttempt: Int): LocalDate = {
     retry(maxAttempt) {
-      onError(readDateOfBirth(console), exception => {
-        console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
-        throw exception
-      })
+      onError(
+        action = readDateOfBirth(console),
+        cleanup = exception => {
+          console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
+          throw exception
+        })
     }
   }
 
