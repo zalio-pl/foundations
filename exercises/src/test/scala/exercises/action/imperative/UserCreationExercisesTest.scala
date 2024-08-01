@@ -44,10 +44,12 @@ class UserCreationExercisesTest extends AnyFunSuite with ScalaCheckDrivenPropert
   }
 
   test("readDateOfBirth example success") {
-    val console = Console.mock(ListBuffer("21-07-1986"), ListBuffer())
-    val result = readDateOfBirth(console)
+    forAll((dob: LocalDate) => {
+      val console = Console.mock(ListBuffer(dateOfBirthFormatter.format(dob)), ListBuffer())
+      val result = readDateOfBirth(console)
 
-    assert(result == LocalDate.of(1986, 7, 21))
+      assert(result == dob)
+    })
   }
 
   test("readDateOfBirth example failure") {
