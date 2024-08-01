@@ -141,21 +141,14 @@ object UserCreationExercises {
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
   // Note: You can implement the retry logic using recursion or a for/while loop. I suggest
   //       trying both possibilities.
-  @tailrec
   def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean = {
-    require(maxAttempt > 0, "[maxAttempt] must be greater than '0'")
-
-    console.writeLine("Would you like to subscribe to our mailing list? [Y/N]")
-    val line = console.readLine()
-
-    Try(parseYesNo(line)) match {
-      case Success(yesNo) => yesNo
-      case Failure(e)     =>
-        console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
-        if (maxAttempt == 1) {
-          throw e
-        }
-        readSubscribeToMailingListRetry(console, maxAttempt - 1)
+    retry(maxAttempt) {
+      Try(readSubscribeToMailingList(console)) match {
+        case Success(yesNo)     => yesNo
+        case Failure(exception) =>
+          console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
+          throw exception
+      }
     }
   }
 
@@ -174,20 +167,14 @@ object UserCreationExercises {
   // [Prompt] Incorrect format, for example enter "18-03-2001" for 18th of March 2001
   // Throws an exception because the user only had 1 attempt and they entered an invalid input.
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
-  @tailrec
   def readDateOfBirthRetry(console: Console, maxAttempt: Int): LocalDate = {
-    require(maxAttempt > 0, "[maxAttempt] must be greater than 0")
-
-    console.writeLine("What's your date of birth? [dd-mm-yyyy]")
-    val line = console.readLine()
-    Try(LocalDate.parse(line, dateOfBirthFormatter)) match {
-      case Success(dob)       => dob
-      case Failure(exception) =>
-        console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
-        if (maxAttempt == 1) {
+    retry(maxAttempt) {
+      Try(readDateOfBirth(console)) match {
+        case Success(dob)       => dob
+        case Failure(exception) =>
+          console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
           throw exception
-        }
-        readDateOfBirthRetry(console, maxAttempt - 1)
+      }
     }
   }
 
