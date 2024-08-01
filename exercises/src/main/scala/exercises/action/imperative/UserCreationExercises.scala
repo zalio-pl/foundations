@@ -11,6 +11,7 @@ import scala.util.{Failure, Success, Try}
 // or run `sbt` in the terminal to open it in shell mode, then type:
 // exercises/runMain exercises.action.imperative.UserCreationApp
 object UserCreationApp extends App {
+
   import UserCreationExercises._
 
   readUser()
@@ -26,8 +27,8 @@ object UserCreationExercises {
     val name = StdIn.readLine()
     println("What's your date of birth? [dd-mm-yyyy]")
     val dateOfBirth = LocalDate.parse(StdIn.readLine(), dateOfBirthFormatter)
-    val now         = Instant.now()
-    val user        = User(name, dateOfBirth, now)
+    val now = Instant.now()
+    val user = User(name, dateOfBirth, now)
     println(s"User is $user")
     user
   }
@@ -44,8 +45,19 @@ object UserCreationExercises {
   // Throws an exception.
   // Note: You can read a user input using `StdIn.readLine()`.
   // Note: You can use `throw new IllegalArgumentException("...")` to throw an exception.
-  def readSubscribeToMailingList(): Boolean =
-    ???
+  def readSubscribeToMailingList(): Boolean = {
+    println("Would you like to subscribe to our mailing list? [Y/N]")
+    val answer = StdIn.readLine()
+    parseYesNo(answer)
+  }
+
+  def parseYesNo(answer: String) = {
+    answer match {
+      case "Y" => true
+      case "N" => false
+      case other => throw new IllegalArgumentException(s"""Expected "Y" or "N" but received $other""")
+    }
+  }
 
   // 2. How can we test `readSubscribeToMailingList`?
   // We cannot use example-based tests or property-based tests
