@@ -146,16 +146,15 @@ object UserCreationExercises {
       throw new IllegalArgumentException("[maxAttempt] must be greater than '0'")
     }
     var lastException: Throwable = null
-    val attempts                 = Seq.range(1, maxAttempt + 1)
-    for (a <- attempts) {
-      val attempt = Try(readSubscribeToMailingList(console))
-      attempt match {
-        case Success(value) => return value
-        case Failure(e)     => {
-          console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
-          if (a == maxAttempt) {
-            lastException = e
-          }
+    val attempt                  = Try(readSubscribeToMailingList(console))
+    attempt match {
+      case Success(value) => return value
+      case Failure(e)     => {
+        console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
+        if (maxAttempt - 1 > 0) {
+          return readSubscribeToMailingListRetry(console, maxAttempt - 1)
+        } else {
+          lastException = e
         }
       }
     }
