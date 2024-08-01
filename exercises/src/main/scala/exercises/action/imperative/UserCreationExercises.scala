@@ -143,12 +143,10 @@ object UserCreationExercises {
   //       trying both possibilities.
   def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean = {
     retry(maxAttempt) {
-      Try(readSubscribeToMailingList(console)) match {
-        case Success(yesNo)     => yesNo
-        case Failure(exception) =>
-          console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
-          throw exception
-      }
+      onError(readSubscribeToMailingList(console), exception => {
+        console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
+        throw exception
+      })
     }
   }
 
@@ -169,12 +167,10 @@ object UserCreationExercises {
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
   def readDateOfBirthRetry(console: Console, maxAttempt: Int): LocalDate = {
     retry(maxAttempt) {
-      Try(readDateOfBirth(console)) match {
-        case Success(dob)       => dob
-        case Failure(exception) =>
-          console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
-          throw exception
-      }
+      onError(readDateOfBirth(console), exception => {
+        console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
+        throw exception
+      })
     }
   }
 

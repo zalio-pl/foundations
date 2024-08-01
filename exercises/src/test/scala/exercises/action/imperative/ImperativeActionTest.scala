@@ -30,13 +30,42 @@ class ImperativeActionTest extends AnyFunSuite with ScalaCheckDrivenPropertyChec
 
   test("retry until action succeeds") {
     var counter = 0
-    val result = Try(retry(5) {
+    val result  = Try(retry(5) {
       counter += 1
       require(counter >= 3, "Counter is too low")
       "Hello"
     })
     assert(result == Success("Hello"))
     assert(counter == 3)
+  }
+
+  test("onError failure") {
+    var counter = 0
+    val boom    = new Exception("Boom")
+
+    val result = Try(
+      onError(
+        action = throw boom,
+        cleanup = _ => counter = counter + 1
+      )
+    )
+
+    assert(counter == 1, "The cleanup should be called only once")
+    assert(result == Failure(boom))
+  }
+
+  test("onError success") {
+    var counter = 0
+
+    val result = Try(
+      onError(
+        action = "Hello",
+        cleanup = _ => counter = counter + 1
+      )
+    )
+
+    assert(result == Success("Hello"))
+    assert(counter == 0, "The cleanup should NEVER be called")
   }
 
 }

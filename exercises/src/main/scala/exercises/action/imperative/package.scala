@@ -50,8 +50,14 @@ package object imperative {
   // onError(throw new Exception("Boom"), e => println("An error occurred: ${e.getMessage}"))
   // Prints "An error occurred: Boom" and then rethrow the "Boom" exception.
   // Note: You need to write tests for `onError` yourself in `exercises.action.imperative.ImperativeActionTest`
-  def onError[A](action: => A, cleanup: Throwable => Any): A =
-    ???
+  def onError[A](action: => A, cleanup: Throwable => Any): A = {
+    Try(action) match {
+      case Success(value)     => value
+      case Failure(exception) =>
+        cleanup(exception)
+        throw exception
+    }
+  }
 
   // 4. Refactor `readSubscribeToMailingListRetry` using `onError` in `UserCreationExercises`.
 
