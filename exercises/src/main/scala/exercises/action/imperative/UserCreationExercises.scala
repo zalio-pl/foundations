@@ -46,8 +46,8 @@ object UserCreationExercises {
 
   def parseYesNo(answer: String) = {
     answer match {
-      case "Y" => true
-      case "N" => false
+      case "Y"   => true
+      case "N"   => false
       case other => throw new IllegalArgumentException(s"""Expected "Y" or "N" but received $other""")
     }
   }
@@ -82,7 +82,7 @@ object UserCreationExercises {
   def readDateOfBirth(console: Console): LocalDate = {
     console.writeLine("What's your date of birth? [dd-mm-yyyy]")
     val line = console.readLine()
-    val dob = LocalDate.parse(line, dateOfBirthFormatter)
+    val dob  = LocalDate.parse(line, dateOfBirthFormatter)
     dob
   }
 
@@ -115,10 +115,11 @@ object UserCreationExercises {
   // Note: How can you mock the current time? Check the `Clock` class in this package
   //       and update the signature of `readUser`.
   def readUser(console: Console, clock: Clock): User = {
-    val name = readName(console)
-    val dateOfBirth = readDateOfBirth(console)
+    val name                    = readName(console)
+    val dateOfBirth             = readDateOfBirth(console)
     val subscribedToMailingList = readSubscribeToMailingList(console)
-    val user = User(name, dateOfBirth, subscribedToMailingList, clock.now())
+    val user                    = User(name, dateOfBirth, subscribedToMailingList, clock.now())
+
     console.writeLine(s"User is $user")
     user
   }
