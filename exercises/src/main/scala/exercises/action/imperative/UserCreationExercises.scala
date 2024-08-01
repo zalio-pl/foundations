@@ -14,7 +14,7 @@ object UserCreationApp extends App {
 
   import UserCreationExercises._
 
-  readUser(Console.system, Clock.system)
+  readUser(Console.system, Clock.system, maxAttempts = 3)
 }
 
 object UserCreationExercises {
@@ -114,10 +114,10 @@ object UserCreationExercises {
   // Note: You will need to add `subscribedToMailingList: Boolean` field to `User`.
   // Note: How can you mock the current time? Check the `Clock` class in this package
   //       and update the signature of `readUser`.
-  def readUser(console: Console, clock: Clock): User = {
+  def readUser(console: Console, clock: Clock, maxAttempts: Int): User = {
     val name                    = readName(console)
-    val dateOfBirth             = readDateOfBirth(console)
-    val subscribedToMailingList = readSubscribeToMailingList(console)
+    val dateOfBirth             = readDateOfBirthRetry(console, maxAttempts)
+    val subscribedToMailingList = readSubscribeToMailingListRetry(console, maxAttempts)
     val user                    = User(name, dateOfBirth, subscribedToMailingList, clock.now())
 
     console.writeLine(s"User is $user")

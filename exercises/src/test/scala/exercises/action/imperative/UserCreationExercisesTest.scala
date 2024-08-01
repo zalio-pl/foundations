@@ -60,11 +60,11 @@ class UserCreationExercisesTest extends AnyFunSuite with ScalaCheckDrivenPropert
   }
 
   test("readUser example") {
-    val inputs = ListBuffer("Eda", "18-03-2001", "Y")
+    val inputs = ListBuffer("Eda", "2010-10-22", "rubbish", "18-03-2001", "Never", "n", "Y")
     val outputs = ListBuffer.empty[String]
     val console = Console.mock(inputs, outputs)
     val clock = Clock.constant(Instant.now)
-    val result = readUser(console, clock)
+    val result = readUser(console, clock, maxAttempts = 3)
 
     val expected = User(
       name = "Eda",
