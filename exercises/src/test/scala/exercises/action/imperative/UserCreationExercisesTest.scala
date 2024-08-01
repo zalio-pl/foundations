@@ -123,12 +123,12 @@ class UserCreationExercisesTest extends AnyFunSuite with ScalaCheckDrivenPropert
 
   test("readDateOfBirthRetry negative maxAttempt") {
     val console = Console.mock(ListBuffer.empty[String], ListBuffer.empty[String])
-    val result = Try(readSubscribeToMailingListRetry(console, maxAttempt = -1))
+    val result = Try(readDateOfBirthRetry(console, maxAttempt = -1))
 
     assert(result.isFailure)
   }
 
-  ignore("readDateOfBirthRetry example success") {
+  test("readDateOfBirthRetry example success") {
     val outputs = ListBuffer.empty[String]
     val console = Console.mock(ListBuffer("July 21st 1986", "21-07-1986"), outputs)
     val result = readDateOfBirthRetry(console, maxAttempt = 2)
@@ -143,7 +143,7 @@ class UserCreationExercisesTest extends AnyFunSuite with ScalaCheckDrivenPropert
     )
   }
 
-  ignore("readDateOfBirthRetry example failure") {
+  test("readDateOfBirthRetry example failure") {
     val outputs = ListBuffer.empty[String]
     val invalidAttempt = "July 21st 1986"
     val console = Console.mock(ListBuffer(invalidAttempt), outputs)

@@ -174,8 +174,22 @@ object UserCreationExercises {
   // [Prompt] Incorrect format, for example enter "18-03-2001" for 18th of March 2001
   // Throws an exception because the user only had 1 attempt and they entered an invalid input.
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
-  def readDateOfBirthRetry(console: Console, maxAttempt: Int): LocalDate =
-    ???
+  @tailrec
+  def readDateOfBirthRetry(console: Console, maxAttempt: Int): LocalDate = {
+    require(maxAttempt > 0, "[maxAttempt] must be greater than 0")
+
+    console.writeLine("What's your date of birth? [dd-mm-yyyy]")
+    val line = console.readLine()
+    Try(LocalDate.parse(line, dateOfBirthFormatter)) match {
+      case Success(dob)       => dob
+      case Failure(exception) =>
+        console.writeLine("""Incorrect format, for example enter "18-03-2001" for 18th of March 2001""")
+        if (maxAttempt == 1) {
+          throw exception
+        }
+        readDateOfBirthRetry(console, maxAttempt - 1)
+    }
+  }
 
   // 7. Update `readUser` so that it allows the user to make up to 2 mistakes (3 attempts)
   // when entering their date of birth and mailing list subscription flag.
