@@ -141,24 +141,22 @@ object UserCreationExercises {
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
   // Note: You can implement the retry logic using recursion or a for/while loop. I suggest
   //       trying both possibilities.
+  @tailrec
   def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean = {
-    if (maxAttempt < 1) {
-      throw new IllegalArgumentException("[maxAttempt] must be greater than '0'")
-    }
-    var lastException: Throwable = null
-    val attempt                  = Try(readSubscribeToMailingList(console))
-    attempt match {
-      case Success(value) => return value
-      case Failure(e)     => {
+    require(maxAttempt > 0, "[maxAttempt] must be greater than '0'")
+
+    console.writeLine("Would you like to subscribe to our mailing list? [Y/N]")
+    val line = console.readLine()
+
+    Try(parseYesNo(line)) match {
+      case Success(yesNo) => yesNo
+      case Failure(e)     =>
         console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
-        if (maxAttempt - 1 > 0) {
-          return readSubscribeToMailingListRetry(console, maxAttempt - 1)
-        } else {
-          lastException = e
+        if (maxAttempt == 1) {
+          throw e
         }
-      }
+        readSubscribeToMailingListRetry(console, maxAttempt - 1)
     }
-    throw lastException
   }
 
   // 6. Implement `readDateOfBirthRetry` which behaves like
