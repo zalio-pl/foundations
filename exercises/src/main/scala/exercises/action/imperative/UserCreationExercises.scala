@@ -141,8 +141,26 @@ object UserCreationExercises {
   // Note: `maxAttempt` must be greater than 0, if not you should throw an exception.
   // Note: You can implement the retry logic using recursion or a for/while loop. I suggest
   //       trying both possibilities.
-  def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean =
-    ???
+  def readSubscribeToMailingListRetry(console: Console, maxAttempt: Int): Boolean = {
+    if (maxAttempt < 1) {
+      throw new IllegalArgumentException("[maxAttempt] must be greater than '0'")
+    }
+    var lastException: Throwable = null
+    val attempts                 = Seq.range(1, maxAttempt + 1)
+    for (a <- attempts) {
+      val attempt = Try(readSubscribeToMailingList(console))
+      attempt match {
+        case Success(value) => return value
+        case Failure(e)     => {
+          console.writeLine("""Incorrect format, enter "Y" for Yes or "N" for "No"""")
+          if (a == maxAttempt) {
+            lastException = e
+          }
+        }
+      }
+    }
+    throw lastException
+  }
 
   // 6. Implement `readDateOfBirthRetry` which behaves like
   // `readDateOfBirth` but retries when the user enters an invalid input.
