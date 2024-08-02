@@ -20,7 +20,7 @@ object UserCreationServiceApp extends App {
 class UserCreationService(console: Console, clock: Clock) {
 
   import UserCreationService._
-  import console.{writeLine, readLine}
+  import console.{readLine, writeLine}
 
   // 1. `readName` works as we expect, but `IO` makes the code
   // more difficult to read by requiring:
@@ -40,26 +40,26 @@ class UserCreationService(console: Console, clock: Clock) {
   // If it doesn't work investigate the methods `map` and `flatMap` on the `IO` trait.
   val readDateOfBirth: IO[LocalDate] =
     for {
-      _ <- writeLine("What's your date of birth? [dd-mm-yyyy]")
+      _    <- writeLine("What's your date of birth? [dd-mm-yyyy]")
       line <- readLine
-      dob <- parseDateOfBirth(line)
+      dob  <- parseDateOfBirth(line)
     } yield dob
 
   // 3. Refactor `readSubscribeToMailingList` and `readUser` using the same techniques as `readDateOfBirth`.
   val readSubscribeToMailingList: IO[Boolean] = {
     for {
-      _ <- writeLine("Would you like to subscribe to our mailing list? [Y/N]")
+      _    <- writeLine("Would you like to subscribe to our mailing list? [Y/N]")
       line <- readLine
-      b <- parseLineToBoolean(line)
+      b    <- parseLineToBoolean(line)
     } yield b
   }
 
   val readUser: IO[User] =
     for {
-      name <- readName
+      name        <- readName
       dateOfBirth <- readDateOfBirth
-      subscribed <- readSubscribeToMailingList
-      now <- clock.now
+      subscribed  <- readSubscribeToMailingList
+      now         <- clock.now
       user = User(name, dateOfBirth, subscribed, now)
       _ <- writeLine(s"User is $user")
     } yield user

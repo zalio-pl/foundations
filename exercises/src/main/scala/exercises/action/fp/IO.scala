@@ -20,12 +20,11 @@ trait IO[A] {
   // action3.unsafeRun()
   // prints "Fetching user", fetches user 1234 from db and returns it.
   // Note: There is a test for `andThen` in `exercises.action.fp.IOTest`.
-  def andThen[Other](other: IO[Other]): IO[Other] = {
+  def andThen[Other](other: IO[Other]): IO[Other] =
     IO {
       this.unsafeRun()
       other.unsafeRun()
     }
-  }
 
   // Popular alias for `andThen` (cat-effect, Monix, ZIO).
   // For example,
@@ -121,7 +120,7 @@ trait IO[A] {
   // then combine their results into a tuple
   def zip[Other](other: IO[Other]): IO[(A, Other)] =
     for {
-      first <- this
+      first  <- this
       second <- other
     } yield (first, second)
 
