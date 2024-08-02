@@ -68,7 +68,35 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   // PART 3: Error handling
   //////////////////////////////////////////////
 
-  test("onError") {}
+  test("onError failure") {
+    var counter1 = 0
+
+    val exception = new IllegalStateException("Boom!")
+    val action = IO(throw exception)
+      .onError(_ => IO(counter1 += 1))
+    assert(counter1 == 0, "Cleanup should be lazy")
+
+    val result = Try(action.unsafeRun())
+    assert(result == Failure(exception))
+    assert(counter1 == 1)
+  }
+
+  test("onError success") {
+    var counter1 = 0
+
+    val action = IO {
+      counter1 += 10
+      "Hello"
+    }
+      .onError { _ =>
+        IO(counter1 += 2)
+      }
+    assert(counter1 == 0)
+
+    val result = Try(action.unsafeRun())
+    assert(result == Success("Hello"))
+    assert(counter1 == 10)
+  }
 
   test("retry, maxAttempt must be greater than 0") {
     val retryAction = IO(1).retry(0)
@@ -80,7 +108,7 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   test("retry until action succeeds") {
     var counter = 0
     val error   = new Exception("Boom")
-    val action  = IO {
+    val action = IO {
       counter += 1
       if (counter >= 3) "Hello"
       else throw error
@@ -97,7 +125,7 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   test("retry fails if maxAttempt is too low") {
     var counter = 0
     val error   = new Exception("Boom")
-    val action  = IO {
+    val action = IO {
       counter += 1
       if (counter >= 3) "Hello"
       else throw error
@@ -130,7 +158,7 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
     var counter = 0
 
     val exception = new Exception("Boom")
-    val action    = IO {
+    val action = IO {
       counter += 1;
       throw exception
     }.attempt
@@ -200,10 +228,12 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
 
     val values: List[Int => Int] = List(_ + 2, _ * 3, _ - 1)
 
-    val action = IO.traverse(values)(f => IO {
-      counter = f(counter);
-      counter
-    })
+    val action = IO.traverse(values)(f =>
+      IO {
+        counter = f(counter);
+        counter
+      }
+    )
     assert(counter == 0)
 
     assert(action.unsafeRun() == List(2, 6, 5))
@@ -218,7 +248,7 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   test("parZip second faster than first") {
     var counter = 0
 
-    val first  = IO.sleep(10.millis) *> IO {
+    val first = IO.sleep(10.millis) *> IO {
       counter += 1;
       counter
     }
@@ -238,7 +268,7 @@ class IOTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   test("parZip first faster than second") {
     var counter = 0
 
-    val first  = IO {
+    val first = IO {
       counter += 1;
       counter
     }
