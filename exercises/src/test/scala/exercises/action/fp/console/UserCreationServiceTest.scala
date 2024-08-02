@@ -129,7 +129,7 @@ class UserCreationServiceTest extends AnyFunSuite with ScalaCheckDrivenPropertyC
     }
   }
 
-  ignore("readUser with retry") {
+  test("readUser with retry") {
     forAll(
       arbitrary[String],
       Gen.listOf(invalidDateGen),
