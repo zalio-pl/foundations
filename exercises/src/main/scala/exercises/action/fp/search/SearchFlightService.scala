@@ -26,10 +26,7 @@ object SearchFlightService {
   def fromTwoClients(client1: SearchFlightClient, client2: SearchFlightClient): SearchFlightService =
     new SearchFlightService {
       def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] = {
-        def searchByClient(client: SearchFlightClient): IO[List[Flight]] =
-          client
-            .search(from, to, date)
-            .handleErrorWith(e => IO.debug(s"Oops error occurred $e") andThen IO(Nil))
+        def searchByClient(client: SearchFlightClient): IO[List[Flight]] = SearchFlightService.searchByClient(client, from, to, date)
 
         for {
           r1 <- searchByClient(client1)
@@ -37,6 +34,11 @@ object SearchFlightService {
         } yield SearchResult(r1 ++ r2)
       }
     }
+
+  def searchByClient(client: SearchFlightClient, from: Airport, to: Airport, date: LocalDate): IO[List[Flight]] =
+    client
+      .search(from, to, date)
+      .handleErrorWith(e => IO.debug(s"Oops error occurred $e") andThen IO(Nil))
 
   // 2. Several clients can return data for the same flight. For example, if we combine data
   // from British Airways and lastminute.com, lastminute.com may include flights from British Airways.
@@ -55,7 +57,15 @@ object SearchFlightService {
   def fromClients(clients: List[SearchFlightClient]): SearchFlightService =
     new SearchFlightService {
       def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] =
-        ???
+        clients
+          .map(client => searchByClient(client, from, to, date))
+          .foldLeft(IO(List[Flight]())) { case (aggregate, nextAction) =>
+            for {
+              result1 <- aggregate
+              result2 <- nextAction
+            } yield result1 ++ result2
+          }
+          .map(SearchResult(_))
     }
 
   // 5. Refactor `fromClients` using `sequence` or `traverse` from the `IO` companion object.
