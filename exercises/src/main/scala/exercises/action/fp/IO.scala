@@ -1,6 +1,7 @@
 package exercises.action.fp
 
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
@@ -13,7 +14,18 @@ trait IO[A] {
   def unsafeRunAsync(callback: Try[A] => Unit): Unit
 
   // Executes the action.
-  def unsafeRun(): A = ???
+  def unsafeRun(): A = {
+    val result: AtomicReference[A] = new AtomicReference[A]()
+    unsafeRunAsync {
+      case Success(value)     => result.set(value)
+      case Failure(exception) => throw exception
+    }
+
+    while (result.get() == null)
+      Thread.sleep(10.millis.toMillis)
+
+    result.get()
+  }
 
   // Runs the current IO (`this`), discards its result and runs the second IO (`other`).
   // For example,
@@ -146,19 +158,24 @@ trait IO[A] {
 }
 
 object IO {
+
+  def async[A](onComplete: (Try[A] => Unit) => Unit): IO[A] = new IO[A] {
+    override def unsafeRunAsync(callback: Try[A] => Unit): Unit =
+      onComplete(callback)
+  }
+
   // Constructor for IO. For example,
   // val greeting: IO[Unit] = IO { println("Hello") }
   // greeting.unsafeRun()
   // prints "Hello"
   def apply[A](action: => A): IO[A] =
-    new IO[A] {
-      override def unsafeRunAsync(callback: Try[A] => Unit): Unit = callback(Try(action))
+    async { callback =>
+      callback(Try(action))
     }
 
   def dispatch[A](action: => A)(ec: ExecutionContext): IO[A] =
-    new IO[A] {
-      override def unsafeRunAsync(callback: Try[A] => Unit): Unit =
-        ec.execute(() => callback(Try(action)))
+    async { callback =>
+      ec.execute(() => callback(Try(action)))
     }
 
   // Construct an IO which throws `error` everytime it is called.
