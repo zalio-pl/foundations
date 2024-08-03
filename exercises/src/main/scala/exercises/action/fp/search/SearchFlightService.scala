@@ -61,7 +61,9 @@ object SearchFlightService {
         def searchByClient(client: SearchFlightClient): IO[List[Flight]] =
           SearchFlightService.searchByClient(client, from, to, date)
 
-        IO.sequence(clients.map(searchByClient))
+        clients
+          .map(searchByClient)
+          .sequence
           .map(_.flatten)
           .map(SearchResult(_))
       }
