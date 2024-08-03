@@ -175,8 +175,9 @@ object IO {
         for {
           result1 <- aggregate // IO[List[A]]
           result2 <- nextAction // IO[A]
-        } yield result1 :+ result2
+        } yield result2 :: result1
       }
+      .map(_.reverse)
 
   // `traverse` is a shortcut for `map` followed by `sequence`, similar to how
   // `flatMap`  is a shortcut for `map` followed by `flatten`
