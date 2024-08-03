@@ -9,9 +9,11 @@ import scala.util.{Failure, Success, Try}
 
 trait IO[A] {
 
-  // Executes the action.
   // This is the ONLY abstract method of the `IO` trait.
-  def unsafeRun(): A
+  def unsafeRunAsync(callback: Try[A] => Unit): Unit
+
+  // Executes the action.
+  def unsafeRun(): A = ???
 
   // Runs the current IO (`this`), discards its result and runs the second IO (`other`).
   // For example,
@@ -150,7 +152,13 @@ object IO {
   // prints "Hello"
   def apply[A](action: => A): IO[A] =
     new IO[A] {
-      def unsafeRun(): A = action
+      override def unsafeRunAsync(callback: Try[A] => Unit): Unit = callback(Try(action))
+    }
+
+  def dispatch[A](action: => A)(ec: ExecutionContext): IO[A] =
+    new IO[A] {
+      override def unsafeRunAsync(callback: Try[A] => Unit): Unit =
+        ec.execute(() => callback(Try(action)))
     }
 
   // Construct an IO which throws `error` everytime it is called.
