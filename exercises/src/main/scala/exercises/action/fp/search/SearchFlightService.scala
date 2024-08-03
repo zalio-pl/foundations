@@ -24,16 +24,17 @@ object SearchFlightService {
   // (see `SearchResult` companion object).
   // Note: A example based test is defined in `SearchFlightServiceTest`.
   //       You can also defined tests for `SearchResult` in `SearchResultTest`
-  def fromTwoClients(client1: SearchFlightClient, client2: SearchFlightClient): SearchFlightService =
+  def fromTwoClients(client1: SearchFlightClient, client2: SearchFlightClient)(
+    ec: ExecutionContext
+  ): SearchFlightService =
     new SearchFlightService {
       def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] = {
         def searchByClient(client: SearchFlightClient): IO[List[Flight]] =
           SearchFlightService.searchByClient(client, from, to, date)
 
         searchByClient(client1)
-          .parZip(searchByClient(client2))(global)
-          .map(tuple => tuple._1 ++ tuple._2)
-          .map(SearchResult(_))
+          .parZip(searchByClient(client2))(ec)
+          .map { case (flights1, flights2) => SearchResult(flights1 ++ flights2) }
       }
     }
 
