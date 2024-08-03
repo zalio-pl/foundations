@@ -25,9 +25,12 @@ object SearchFlightService {
   //       You can also defined tests for `SearchResult` in `SearchResultTest`
   def fromTwoClients(client1: SearchFlightClient, client2: SearchFlightClient): SearchFlightService =
     new SearchFlightService {
-      def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] =
-        ???
-
+      def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] = {
+        for {
+          r1 <- client1.search(from, to, date)
+          r2 <- client2.search(from, to, date)
+        } yield SearchResult(r1 ++ r2)
+      }
     }
 
   // 2. Several clients can return data for the same flight. For example, if we combine data

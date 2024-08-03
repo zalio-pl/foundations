@@ -18,7 +18,7 @@ import scala.util.Random
 // testOnly exercises.action.fp.search.SearchFlightServiceTest
 class SearchFlightServiceTest extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
 
-  ignore("fromTwoClients example") {
+  test("fromTwoClients example") {
     val now   = Instant.now()
     val today = LocalDate.now()
 
