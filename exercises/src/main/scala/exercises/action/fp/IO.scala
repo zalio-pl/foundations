@@ -15,16 +15,12 @@ trait IO[A] {
 
   // Executes the action.
   def unsafeRun(): A = {
-    val result: AtomicReference[A] = new AtomicReference[A]()
-    unsafeRunAsync {
-      case Success(value)     => result.set(value)
-      case Failure(exception) => throw exception
-    }
+    var result: Option[Try[A]] = None
+    unsafeRunAsync(tryA => result = Some(tryA))
 
-    while (result.get() == null)
-      Thread.sleep(10.millis.toMillis)
+    while (result.isEmpty) Thread.sleep(10)
 
-    result.get()
+    result.get.get
   }
 
   // Runs the current IO (`this`), discards its result and runs the second IO (`other`).
