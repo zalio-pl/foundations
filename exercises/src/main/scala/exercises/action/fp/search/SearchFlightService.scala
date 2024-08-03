@@ -26,9 +26,14 @@ object SearchFlightService {
   def fromTwoClients(client1: SearchFlightClient, client2: SearchFlightClient): SearchFlightService =
     new SearchFlightService {
       def search(from: Airport, to: Airport, date: LocalDate): IO[SearchResult] = {
+        def searchByClient(client: SearchFlightClient): IO[List[Flight]] =
+          client
+            .search(from, to, date)
+            .handleErrorWith(e => IO.debug(s"Oops error occurred $e") andThen IO(Nil))
+
         for {
-          r1 <- client1.search(from, to, date)
-          r2 <- client2.search(from, to, date)
+          r1 <- searchByClient(client1)
+          r2 <- searchByClient(client2)
         } yield SearchResult(r1 ++ r2)
       }
     }
