@@ -134,8 +134,8 @@ trait IO[A] {
   // then combine their results into a tuple
   def parZip[Other](other: IO[Other])(ec: ExecutionContext): IO[(A, Other)] =
     IO {
-      val future1: Future[A]     = Future(this.unsafeRun())
-      val future2: Future[Other] = Future(other.unsafeRun())
+      val future1: Future[A]     = Future(this.unsafeRun())(ec)
+      val future2: Future[Other] = Future(other.unsafeRun())(ec)
 
       val zipped: Future[(A, Other)] = future1.zip(future2)
 
