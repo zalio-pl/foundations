@@ -170,7 +170,13 @@ object IO {
   // If no error occurs, it returns the users in the same order:
   // List(User(1111, ...), User(2222, ...), User(3333, ...))
   def sequence[A](actions: List[IO[A]]): IO[List[A]] =
-    ???
+    actions
+      .foldLeft(IO(List[A]())) { case (aggregate, nextAction) =>
+        for {
+          result1 <- aggregate // IO[List[A]]
+          result2 <- nextAction // IO[A]
+        } yield result1 :+ result2
+      }
 
   // `traverse` is a shortcut for `map` followed by `sequence`, similar to how
   // `flatMap`  is a shortcut for `map` followed by `flatten`
