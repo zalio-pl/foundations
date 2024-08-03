@@ -16,9 +16,13 @@ trait IO[A] {
   // Executes the action.
   def unsafeRun(): A = {
     var result: Option[Try[A]] = None
-    unsafeRunAsync(tryA => result = Some(tryA))
+    val latch: CountDownLatch  = new CountDownLatch(1)
+    unsafeRunAsync { tryA =>
+      result = Some(tryA)
+      latch.countDown()
+    }
 
-    while (result.isEmpty) Thread.sleep(10)
+    latch.await()
 
     result.get.get
   }
