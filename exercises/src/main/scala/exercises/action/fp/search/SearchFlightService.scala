@@ -5,6 +5,7 @@ import exercises.action.fp.IO
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration._
 
 // This represent the main API of Lambda Corp.
@@ -29,10 +30,10 @@ object SearchFlightService {
         def searchByClient(client: SearchFlightClient): IO[List[Flight]] =
           SearchFlightService.searchByClient(client, from, to, date)
 
-        for {
-          r1 <- searchByClient(client1)
-          r2 <- searchByClient(client2)
-        } yield SearchResult(r1 ++ r2)
+        searchByClient(client1)
+          .parZip(searchByClient(client2))(global)
+          .map(tuple => tuple._1 ++ tuple._2)
+          .map(SearchResult(_))
       }
     }
 
