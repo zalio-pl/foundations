@@ -179,10 +179,7 @@ object IO {
   def sequence[A](actions: List[IO[A]]): IO[List[A]] =
     actions
       .foldLeft(IO(List[A]())) { case (aggregate, nextAction) =>
-        for {
-          result1 <- aggregate // IO[List[A]]
-          result2 <- nextAction // IO[A]
-        } yield result2 :: result1
+        aggregate.zip(nextAction).map { case (result1, result2) => result2 :: result1 }
       }
       .map(_.reverse)
 
@@ -208,20 +205,11 @@ object IO {
   // List(User(1111, ...), User(2222, ...), User(3333, ...))
   // Note: You may want to use `parZip` to implement `parSequence`.
   def parSequence[A](actions: List[IO[A]])(ec: ExecutionContext): IO[List[A]] =
-    IO {
-      val futures: Future[List[A]] =
-        actions
-          .map(a => Future(a.unsafeRun()))
-          .foldLeft(Future(List[A]())) { case (aggregate, nextAction) =>
-            for {
-              result1 <- aggregate // List[A]
-              result2 <- nextAction // A
-            } yield result2 :: result1
-          }
-          .map(_.reverse)
-
-      Await.result(futures, Duration.Inf) // List[A]
-    }
+    actions
+      .foldLeft(IO(List[A]())) { case (aggregate, nextAction) =>
+        aggregate.parZip(nextAction)(ec).map { case (result1, result2) => result2 :: result1 }
+      }
+      .map(_.reverse)
 
   // `parTraverse` is a shortcut for `map` followed by `parSequence`, similar to how
   // `flatMap`     is a shortcut for `map` followed by `flatten`
