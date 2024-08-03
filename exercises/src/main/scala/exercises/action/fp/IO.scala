@@ -67,10 +67,12 @@ trait IO[A] {
   // action.unsafeRun()
   // Fetches the user with id 1234 from the database and send them an email using the email
   // address found in the database.
-  def flatMap[Next](callback: A => IO[Next]): IO[Next] =
-    IO {
-      val a = this.unsafeRun()
-      callback(a).unsafeRun()
+  def flatMap[Next](next: A => IO[Next]): IO[Next] =
+    IO.async { callback =>
+      this.unsafeRunAsync {
+        case Failure(exception) => callback(Failure(exception))
+        case Success(value)     => next(value).unsafeRunAsync(callback)
+      }
     }
 
   // Runs the current action, if it fails it executes `cleanup` and rethrows the original error.
@@ -147,13 +149,16 @@ trait IO[A] {
   // Runs both the current IO and `other` concurrently,
   // then combine their results into a tuple
   def parZip[Other](other: IO[Other])(ec: ExecutionContext): IO[(A, Other)] =
-    IO {
-      val future1: Future[A]     = Future(this.unsafeRun())
-      val future2: Future[Other] = Future(other.unsafeRun())
+    IO.async { onComplete =>
+      val promise1: Promise[A]     = Promise()
+      val promise2: Promise[Other] = Promise()
 
-      val zipped: Future[(A, Other)] = future1.zip(future2)
+      ec.execute(() => this.unsafeRunAsync(promise1.complete))
+      ec.execute(() => other.unsafeRunAsync(promise2.complete))
 
-      Await.result(zipped, Duration.Inf)
+      val zipped: Future[(A, Other)] = promise1.future.zip(promise2.future)
+
+      zipped.onComplete(onComplete)(ec)
     }
 }
 
@@ -233,20 +238,11 @@ object IO {
   // List(User(1111, ...), User(2222, ...), User(3333, ...))
   // Note: You may want to use `parZip` to implement `parSequence`.
   def parSequence[A](actions: List[IO[A]])(ec: ExecutionContext): IO[List[A]] =
-    IO {
-      val futures: Future[List[A]] =
-        actions
-          .map(a => Future(a.unsafeRun())(ec))
-          .foldLeft(Future(List[A]())(ec)) { case (aggregate, nextAction) =>
-            for {
-              result1 <- aggregate // List[A]
-              result2 <- nextAction // A
-            } yield result2 :: result1
-          }
-          .map(_.reverse)
-
-      Await.result(futures, Duration.Inf) // List[A]
-    }
+    actions
+      .foldLeft(IO(List[A]())) { case (aggregate, nextAction) =>
+        aggregate.parZip(nextAction)(ec).map { case (result1, result2) => result2 :: result1 }
+      }
+      .map(_.reverse)
 
   // `parTraverse` is a shortcut for `map` followed by `parSequence`, similar to how
   // `flatMap`     is a shortcut for `map` followed by `flatten`
